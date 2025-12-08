@@ -1,6 +1,17 @@
 use crate::task::Task;
 use std::fs;
-use std::path::Path;
+use std::path::{PathBuf};
+
+fn get_data_file_path() -> PathBuf {
+  let home_dir = dirs::home_dir().expect("获取用户主目录失败");
+  let data_dir = home_dir.join(".todo");
+
+  if !data_dir.exists() {
+    fs::create_dir_all(&data_dir).expect("创建数据目录失败");
+  }
+
+  data_dir.join("todo_list.json")
+}
 
 pub fn insert_task(mut task: Task) -> Result<(), String> {
   let mut tasks = query_tasks()?;
@@ -14,7 +25,7 @@ pub fn insert_task(mut task: Task) -> Result<(), String> {
 }
 
 fn write_tasks(tasks: Vec<Task>) {
-  let file_path = "todo_list.json";
+  let file_path = get_data_file_path();
   let _ = fs::write(
     file_path, 
     serde_json::to_string(&tasks).unwrap()
@@ -22,8 +33,8 @@ fn write_tasks(tasks: Vec<Task>) {
 }
 
 pub fn query_tasks() -> Result<Vec<Task>, String> {
-  let file_path = "todo_list.json";
-  if Path::new(file_path).exists() {
+  let file_path = get_data_file_path();
+  if file_path.exists() {
     let content = fs::read_to_string(file_path)
       .map_err(|e| format!("读取文件失败: {}", e))?;
 
